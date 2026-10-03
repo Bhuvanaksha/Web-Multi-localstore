@@ -1,0 +1,34 @@
+{
+  "name": "alpha-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "npm run build -w @alpha/shared && concurrently -n backend,frontend -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:clean": "bash scripts/dev-clean.sh",
+    "dev:backend": "npm run dev -w @alpha/backend",
+    "dev:frontend": "npm run dev -w @alpha/frontend",
+    "build": "npm run build -w @alpha/shared && npm run build -w @alpha/backend && npm run build -w @alpha/frontend",
+    "seed": "npm run build -w @alpha/shared && npm run seed -w @alpha/backend",
+    "make:admin": "npm run make:admin -w @alpha/backend --",
+    "seed:export": "npm run seed:export -w @alpha/backend",
+    "export:orders": "npm run export:orders -w @alpha/backend",
+    "typecheck": "npm run typecheck -ws --if-present",
+    "test": "npm run test -ws --if-present",
+    "test:ci": "npm run test:ci -ws --if-present",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "concurrently": "^9.0.1",
+    "turbo": "^2.1.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}

@@ -1,0 +1,237 @@
+========================================================================
+ALPHA PLATFORM — SECURITY FEATURES (FULL LIST)
+Generated: 2026-08-14
+========================================================================
+
+All features are enforced SERVER-SIDE. Verification: `npm run dev`, then
+open http://localhost:8175. Dev demo accounts: admin@alpha.local /
+AdminPass@1234 (admin), krishna.groceries@example.com / Provider@1234
+(provider), or register any account (role is picked from the email:
+".local" -> admin, "store"/"groceries" in the address -> provider,
+anything else -> customer).
+
+------------------------------------------------------------------------
+NEW IN THIS ROUND (7 features)
+------------------------------------------------------------------------
+
+1) ACCOUNT LOCKOUT (brute-force protection, per account)
+   Where: packages/backend/src/models/UserModel.ts (failedLoginAttempts,
+   lockoutUntil, MAX_FAILED_LOGIN_ATTEMPTS = 5, LOCKOUT_MS = 15 min) —
+   enforced in UserModel.findByCredentials; login goes through it in
+   packages/backend/src/services/AuthService.ts.
+   What: 5 wrong passwords in a row lock the account for 15 minutes;
+   even the correct password is rejected while locked. A successful
+   login clears the counter. Complements the per-IP rate limiter.
+   How to prove:
+   - Live (API): POST /api/v1/auth/login with a wrong password 5x, then
+     POST again with the CORRECT password -> 401 "Account temporarily
+     locked — try again in 15 min" (verified live).
+   - Test: npm test — "locks the account after repeated failed logins".
+
+2) PASSWORD STRENGTH POLICY + COMMON-PASSWORD BLACKLIST
+   Where: packages/backend/src/utils/passwordPolicy.ts
+   (assertStrongPassword), called from AuthService.register,
+   AuthService.resetPassword, AuthService.changePassword. Client-side
+   zod mirrors it in RegisterPage/SettingsPage/ResetPasswordPage.
+   What: minimum 12 chars (zod, enforced first), a blacklist of ~100
+   of the most common passwords (incl. 12+ char variants like
+   "passwordpassword"), rejections of passwords containing the
+   username or the email local part, and single-repeated-character
+   passwords.
+   How to prove:
+   - Live: register with password "passwordpassword" -> 422 "That
+     password is too common" (verified live); register with a password
+     containing your username -> 422.
+   - Test: npm test — "rejects weak and user-derived passwords".
+
+3) MFA RECOVERY CODES (one-time, hashed)
+   Where: packages/backend/src/services/AuthService.ts (enableMfa
+   generates 10 codes, stores SHA-256 hashes in UserModel
+   mfaRecoveryCodes with select:false; verifyMfaChallenge redeems and
+   burns a code). Frontend: packages/frontend/src/pages/SettingsPage.tsx
+   (shows codes ONCE with copy button after enabling MFA).
+   What: when you enable TOTP MFA you get 10 single-use recovery codes
+   (shown only once). If you lose your authenticator app, any one code
+   signs you in instead of a 6-digit TOTP. Each code works exactly once.
+   How to prove:
+   - Settings -> Two-factor authentication -> enable -> codes appear.
+   - Test: npm test — "issues 10 recovery codes on MFA enable, and each
+     code works exactly once" (second use is rejected 401).
+
+4) ACTIVE SESSION MANAGEMENT + "SIGN OUT EVERYWHERE"
+   Where: packages/backend/src/models/RefreshTokenModel.ts (device, ip,
+   lastUsedAt on each refresh token), AuthService.listSessions /
+   revokeSession / revokeOtherSessions; endpoints in
+   packages/backend/src/routes/authRoutes.ts
+   (GET /auth/sessions, DELETE /auth/sessions/:id,
+   POST /auth/sessions/revoke-all). Frontend:
+   packages/frontend/src/pages/SettingsPage.tsx (Active sessions card).
+   What: every login records the device/browser + IP. Settings lists
+   all active sessions with "this device" marking, lets you revoke any
+   single session instantly, or sign out everywhere except the current
+   device. Password changes/resets already revoke all sessions.
+   How to prove:
+   - Settings -> Active sessions: log in from two browsers, both
+     appear; "Sign out everywhere else" keeps only the current one.
+   - Test: npm test — "lists sessions and signs out everywhere else".
+
+5) SECURITY ALERTS BY EMAIL (new-IP login, password changes, MFA toggles)
+   Where: packages/backend/src/services/AuthService.ts
+   (sendSecurityAlert + login's lastLoginIp tracking). Emails go through
+   utils/email.ts — with real SMTP they are sent; without SMTP (dev)
+   they are printed in the backend log as "[mail:dev] email would be
+   sent" so you can see them.
+   What: you get an alert when (a) your account is signed into from a
+   NEW IP address, (b) your password is reset, (c) your password is
+   changed, (d) MFA is enabled, (e) MFA is disabled — each logged in
+   the Activity log as well.
+   How to prove: log in from a new IP (or after changing your IP) and
+   watch the backend log for the "New sign-in detected" alert; change
+   your password in Settings and see the "Password changed" alert.
+
+6) SENSITIVE-DATA REDACTION IN LOGS
+   Where: packages/backend/src/utils/logger.ts (redact / redactDeep —
+   applied to every console + file log line).
+   What: any logged object key matching password/token/secret/api-key/
+   cookie/authorization etc. is replaced with [REDACTED]; token values
+   embedded in URLs (e.g. reset/verify links in dev mail bodies) are
+   scrubbed too. Passwords and tokens never reach the logs.
+   How to prove:
+   - Live: POST /api/v1/auth/forgot-password, then grep the backend
+     log — the reset link prints as "reset-password?token=[REDACTED]"
+     (verified live).
+
+7) IDLE SESSION TIMEOUT (auto sign-out)
+   Where: packages/frontend/src/layouts/RootLayout.tsx (idle timer on
+   mousemove/keydown/click/touch/scroll).
+   What: after 25 minutes of no activity a warning banner appears;
+   after 30 minutes the session is ended and you're taken to the login
+   page. Any activity resets the timer.
+   How to prove: log in, stop touching the machine for 30 minutes —
+   a warning appears at 25 min and you're signed out at 30 min.
+
+------------------------------------------------------------------------
+ALREADY IN PLACE (previous rounds)
+------------------------------------------------------------------------
+
+8) TOTP TWO-FACTOR AUTHENTICATION (MFA) FOR ALL ACCOUNTS
+   Where: AuthService (setupMfa/enableMfa/disableMfa/verifyMfaChallenge),
+   routes /auth/mfa/*, Settings -> Two-factor authentication.
+   What: QR-code setup (Google Authenticator/Authy), two-step login
+   (password -> 6-digit code via a 5-minute challenge token), secret
+   never exposed. Proof: Settings -> enable -> log out -> log in asks
+   for a code.
+
+9) FORGOT / RESET / CHANGE PASSWORD
+   Where: AuthService (forgotPassword/resetPassword/changePassword),
+   routes /auth/forgot-password, /auth/reset-password,
+   /auth/change-password; pages /forgot-password, /reset-password,
+   Settings -> Change password.
+   What: one-time 1-hour reset links (hashed at rest, single use,
+   revokes all sessions), change-password requires the current password
+   and logs out other sessions. Proof: /forgot-password -> link (dev:
+   backend log) -> reset -> old password rejected 401.
+
+10) EMAIL VERIFICATION
+    Where: AuthService (verifyEmail/resendVerification), route
+    /auth/verify + /auth/resend-verification, Settings -> Email
+    verification, page /verify.
+    What: verification link on registration; status + resend in
+    Settings; seeded accounts pre-verified; .local admins auto-verified.
+    Proof: register -> link in dev log -> /verify -> status updates.
+
+11) EMAIL-DRIVEN ROLE-BASED ACCESS CONTROL
+    Where: AuthService.roleFromEmail + restrictTo middleware +
+    role-guarded routes (orders = buyers, listings = sellers,
+    resources = authors), role-aware frontend nav/pages.
+    What: .local -> admin; "store"/"groceries" -> provider; else
+    customer. Customers can't create listings or posts (403), providers
+    can't order (403), enforced server-side. Proof: register with
+    different emails and try cross-role actions.
+
+12) STRICT ROLE SEPARATION (RBAC)
+    Where: packages/backend/src/middleware/auth.ts (protect,
+    restrictTo), route guards, frontend role gates (AccessDenied,
+    role-aware nav + dashboards). Proof: log in as a provider and visit
+    /cart or /orders -> "Sellers can't shop" + API 403.
+
+13) JWT AUTH WITH ROTATING REFRESH TOKENS
+    Where: AuthService (signAccessToken RS256, 15-min TTL; refresh
+    tokens random 48-byte values, stored SHA-256-hashed, rotated on
+    every refresh, httpOnly cookie, 7-day TTL, revocable).
+    Proof: /auth/refresh rotates; replaying a used refresh token
+    returns 401 (covered by tests).
+
+14) SECURITY HEADERS (helmet) + CSP
+    Where: packages/backend/src/middleware/security.ts.
+    What: CSP (no inline scripts, framed only by self), HSTS,
+    X-Content-Type-Options, X-Frame-Options, Referrer-Policy, no
+    DNS-prefetch. Proof: curl -I the API — headers present.
+
+15) CSRF PROTECTION (double-submit cookie)
+    Where: packages/backend/src/middleware/csrf.ts. Proof: state-
+    changing request with a mismatched X-XSRF-TOKEN -> 401.
+
+16) CORS WHITELIST
+    Where: packages/backend/src/middleware/cors.ts + FRONTEND_ORIGIN.
+    Proof: cross-origin browser request from an unlisted origin is
+    rejected.
+
+17) RATE LIMITING (global 100/min, auth 5/min, search 20/min;
+    Redis-backed when available)
+    Where: packages/backend/src/middleware/rateLimiter.ts.
+    Proof: hammer /api/v1/auth/login -> 429 "Too many requests"
+    (observed live during testing).
+
+18) BCRYPT PASSWORD HASHING (12 rounds) — UserModel pre-save hook.
+    Proof: DB stores hashes; the API never returns the password field.
+
+19) XSS PROTECTION — sanitize-html on all rich-text content
+    (ResourceService, CommentService). Proof: submit content with
+    <script> — it is stripped on save.
+
+20) UPLOAD RESTRICTIONS — images only (JPEG/PNG/WebP/GIF/AVIF ext +
+    MIME) in UploadService; validation before any S3 call.
+    Proof: presign with a .txt file -> 422 (verified live).
+
+21) INPUT VALIDATION EVERYWHERE — zod schemas shared between frontend
+    and backend (packages/shared) + express validation middleware.
+
+22) NO-SQL INJECTION MITIGATION — mongoose params + zod-validated
+    inputs; aggregation pipelines use parameterized stages.
+
+23) DEPENDENCY SECURITY — npm audit clean for production deps
+    (unmaintained xlsx removed -> exceljs; nodemailer 9; react-router 7;
+    uuid 11). Remaining advisories are dev/test-only (vite/vitest/
+    esbuild dev servers). Proof: npm audit.
+
+24) SECRETS HYGIENE — .env + keys/ gitignored and excluded from Docker
+    images (.dockerignore), keys generated via
+    packages/backend/scripts/generate-keys.sh, production requires
+    S3/SMTP config (env.ts).
+
+25) CONNECTION RESILIENCE — MongoDB connect retries with backoff
+    (config/db.ts) so transient Atlas DNS failures don't 500 the API.
+
+========================================================================
+QUICK PROOF COMMANDS (backend on :5347)
+========================================================================
+# weak password
+curl -X POST http://localhost:5347/api/v1/auth/register -H 'Content-Type: application/json' \
+  -d '{"username":"demo1","email":"demo1@gmail.com","password":"passwordpassword"}'
+# -> 422 "That password is too common"
+
+# lockout: run the same login 5x with a wrong password, then with the right one
+curl -X POST http://localhost:5347/api/v1/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"you@example.com","password":"WrongPass@123"}'
+# after 5 fails -> 401 "Account temporarily locked — try again in 15 min"
+
+# log redaction: request a reset, then grep the backend log
+curl -X POST http://localhost:5347/api/v1/auth/forgot-password -H 'Content-Type: application/json' \
+  -d '{"email":"you@example.com"}'
+grep "reset-password?token=" /tmp/backend.log   # -> token=[REDACTED]
+
+# sessions
+curl http://localhost:5347/api/v1/auth/sessions -H "Authorization: Bearer <token>"
+# tests: npm test  (backend 42 passed, incl. the new security tests)
+========================================================================

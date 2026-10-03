@@ -1,0 +1,346 @@
+========================================================================
+ALPHA PLATFORM — COMPLETE USER GUIDE
+Multi-Local Store with Web Security | How to run & use this project
+========================================================================
+
+WHAT THIS PROJECT IS
+--------------------
+A full-stack marketplace where LOCAL PROVIDERS sell groceries, dairy,
+bakery items, electronics and services to CUSTOMERS. It is built as a
+MERN monorepo with 25+ server-enforced security features (MFA, account
+lockout, CSRF, rate limiting, JWT rotation, RBAC, and more).
+
+  packages/shared    -> Zod schemas + enums shared by frontend & backend
+  packages/backend   -> Express REST API (:5347) + Socket.io + MongoDB
+  packages/frontend  -> React SPA (Vite, :8175)
+
+Ports:  backend 5347 | frontend dev 8175 | production nginx 8080
+
+
+========================================================================
+PART 1 — SETUP (one time)
+========================================================================
+
+REQUIREMENTS
+  * Node.js >= 20          (node -v)
+  * npm >= 10              (npm -v)
+  * MongoDB running locally OR a MongoDB Atlas URI
+  * Redis (OPTIONAL — app degrades gracefully without it)
+  * Docker (OPTIONAL — only for production mode)
+
+STEPS
+  1) Install dependencies (workspaces included):
+        npm install
+
+  2) Create your env file:
+        cp .env.example .env
+     Then edit .env and set:
+        MONGODB_URI=mongodb://localhost:27017/alpha
+        (or your Atlas URI — percent-encode special chars in the password)
+
+  3) Generate the JWT RSA keypair (required for login to work):
+        bash packages/backend/scripts/generate-keys.sh
+     Keys land in packages/backend/keys/ (gitignored, never commit them).
+
+  4) Seed the marketplace with 8 demo providers + 29 listings:
+        npm run seed
+     (Idempotent — safe to run again any time. Passwords reset to the
+      catalog value on re-run.)
+
+
+========================================================================
+PART 2 — RUN IN DEVELOPMENT
+========================================================================
+
+  npm run dev
+
+This builds @alpha/shared, then starts together:
+  * backend API  ->  http://localhost:5347   (health: /healthz)
+  * frontend SPA ->  http://localhost:8175
+
+Open http://localhost:8175 in your browser. The Vite dev server proxies
+/api and /socket.io to the backend, so there are NO CORS issues.
+
+If emails matter to you: without SMTP configured, every email the system
+" sends" (verification links, password resets, order alerts) is printed
+in the backend terminal log as "[mail:dev] email would be sent".
+
+
+========================================================================
+PART 3 — DEMO ACCOUNTS
+========================================================================
+
+  ROLE       EMAIL                          PASSWORD
+  ---------  -----------------------------  ---------------
+  Admin      admin@alpha.local              AdminPass@1234
+  Provider   krishna.groceries@example.com  Provider@1234
+  (7 more provider accounts — see packages/backend/seed/provider-catalog.json)
+
+  Customers: just REGISTER any email, e.g. ravi@gmail.com.
+  Roles are assigned SERVER-SIDE from the email pattern (never chosen in
+  the browser):
+     ends with .local          -> admin
+     contains store/groceries  -> provider
+     anything else             -> customer
+
+  Dedicated auth pages: /login /register (customers)
+                        /login/provider /register/provider (sellers)
+
+
+========================================================================
+PART 4 — WHAT EACH ROLE CAN DO
+========================================================================
+
+CUSTOMER (buyer) — /dashboard
+  1. Browse /marketplace (auto-refreshes every 30s; sold-out items
+     disappear automatically).
+  2. Add to cart -> /cart shows totals in ₹.
+  3. Checkout: enter recipient name, phone, full address + 6-digit PIN,
+     pick payment: UPI / Cash on Delivery / Card (demo gateway).
+  4. Order appears in /orders with a status timeline:
+        pending -> confirmed -> shipped -> delivered
+     You can CANCEL while it is still pending (stock is restored).
+  5. Realtime bell notifications on every status change.
+  6. /dashboard/settings: change password, enable MFA (QR code),
+     see active sessions + "sign out everywhere", email verification
+     status, MFA recovery codes.
+
+PROVIDER (seller) — /provider (Provider Studio)
+  1. Create listings: title, description, category (service/grocery/
+     item/other), price, unit (kg/L/units/pcs), stock quantity.
+  2. See your incoming orders in the provider inbox; CONFIRM, SHIP,
+     DELIVER or CANCEL (pending only) each order.
+  3. Mark COD orders paid after collecting cash.
+  4. Export your listings to Excel (button in Studio).
+  5. Get realtime + email alerts the moment an order arrives.
+  NOTE: providers can browse the marketplace but never see Cart/Orders
+  (button is replaced with "browsing as a seller"). Trying /cart anyway
+  shows "Sellers can't shop" and the API returns 403.
+
+ADMIN — /admin (4 tabs)
+  * Moderation: review community resources (approve/reject/request
+    changes) via a strict state machine.
+  * Orders: every order with customer, items, ₹ totals, payment +
+    "Export to Excel".
+  * Activity logs: full audit trail (registrations, logins, orders,
+    listing changes), filterable + exportable.
+  * Security & Monitoring (auto-refresh 30s): MFA/verification/
+    lockout adoption, 7-day login success/failure trend, top
+    failed-login accounts (brute-force suspects), recent security
+    events, system health + "Export security report" (4 sheets).
+  * Also: "Full report (.xlsx)" button -> 7-sheet workbook.
+
+LEGACY "member" role can both buy AND sell AND publish posts; it is
+migrated automatically by the seeder based on the email rule.
+
+
+========================================================================
+PART 5 — SECURITY FEATURES TOUR (how to see each one live)
+========================================================================
+
+All enforced SERVER-SIDE (frontend checks are only for UX).
+
+1. ACCOUNT LOCKOUT: POST a wrong password 5x to /api/v1/auth/login,
+   then the CORRECT one -> 401 "Account temporarily locked — 15 min".
+
+2. PASSWORD POLICY: register with "passwordpassword" -> 422 "too
+   common". Min 12 chars; ~100 blacklisted; rejects username/email
+   derivatives; rejects aaaaa...; rejects "123456789012".
+
+3. MFA (TOTP): Settings -> Two-factor auth -> QR into Google
+   Authenticator -> login now asks for the 6-digit code. You also get
+   10 ONE-TIME recovery codes (shown once; each works exactly once).
+
+4. SESSIONS: Settings -> Active sessions lists device + IP per login;
+   revoke one or "sign out everywhere else".
+
+5. EMAIL SECURITY ALERTS: new-IP login, password change/reset, MFA
+   on/off. In dev they print in the backend log.
+
+6. LOG REDACTION: request a password reset, then grep the backend log:
+   the token prints as "token=[REDACTED]". Passwords/tokens/cookies
+   never reach logs (winston redactDeep).
+
+7. IDLE TIMEOUT: logged in + 25 min of no input -> warning banner;
+   30 min -> auto sign-out to /login.
+
+8. JWT + ROTATION: access token 15 min (RS256); refresh token 7 days,
+   httpOnly cookie, SHA-256-hashed in DB, rotated on every refresh;
+   replaying a used refresh token -> 401 (tested).
+
+9. HEADERS/CSP: curl -I http://localhost:5347/healthz -> CSP, HSTS,
+   X-Frame-Options, nosniff. No unsafe-inline scripts.
+
+10. CSRF: browser state-changing requests must echo the XSRF-TOKEN
+    cookie in the X-XSRF-TOKEN header (axios does it automatically);
+    mismatch -> 401.
+
+11. CORS whitelist: only FRONTEND_ORIGIN origins are accepted.
+
+12. RATE LIMITS: global 100/min, auth 5/min, search 20/min (Redis-
+    backed when available, in-memory otherwise). Hammer /auth/login
+    -> 429.
+
+13. BCRYPT 12 rounds; hashes never leave the server.
+
+14. XSS: sanitize-html whitelist on posts/comments + DOMPurify on
+    render; submit <script> and it is stripped.
+
+15. UPLOADS: only JPEG/PNG/WebP/GIF/AVIF get an S3 presigned URL
+    (.txt -> 422).
+
+16. VALIDATION: every input is Zod-validated (shared schemas) —
+    bad payload -> 422.
+
+17. NO-SQL INJECTION: mongoose + zod strict schemas; regex search
+    escapes special chars.
+
+18. SECRETS HYGIENE: .env + keys/ gitignored and Docker-ignored;
+    production boots fail without S3/SMTP config (env.ts).
+
+
+========================================================================
+PART 6 — ORDERS & PAYMENTS IN DETAIL
+========================================================================
+
+* Prices are computed SERVER-SIDE in ₹ (INR). The client only sends
+  { listingId, quantity } — it can never set a price.
+
+* Stock decrement is ATOMIC (findOneAndUpdate with a quantity guard),
+  so two customers buying the last unit cannot both succeed. Stock 0
+  flips the listing to sold_out and buyers' views auto-refresh.
+
+* Cancelling a PENDING order restores the reserved stock.
+
+* Payment methods:
+    - COD      -> stays "unpaid" until the provider marks it paid.
+    - UPI/Card -> demo gateway marks paid instantly. If real Razorpay
+      keys are set (RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET in .env), the
+      order starts unpaid, a real Razorpay order is created, and the
+      signature is HMAC-SHA256-verified server-side before "paid".
+
+* Delivery address is stored with the order and shown to the customer,
+  the provider inbox, and the admin order list/exports.
+
+
+========================================================================
+PART 7 — EXCEL REPORTS (where every file lives)
+========================================================================
+
+  reports/report_YYYY-MM-DD_HH-MM.xlsx   hourly automated (cron) or
+                                         admin "Full report" button
+                                         (7 sheets; keeps last 10)
+  exports/orders-report-<date>.xlsx      npm run export:orders
+  exports/provider-catalog.xlsx          npm run seed:export
+  Provider's own listings                Provider Studio export button
+  Activity logs                          Admin -> Activity -> export
+  Security report                        Admin -> Security -> export
+
+All Excel generation uses exceljs (the vulnerable "xlsx" package was
+removed on purpose).
+
+
+========================================================================
+PART 8 — TESTS, LINT, TYPECHECK
+========================================================================
+
+  npm test          backend (42 tests: unit + integration with an
+                    in-memory MongoDB) and frontend (7 tests)
+  npm run typecheck tsc --noEmit in all 3 packages
+  npm run lint      biome check (note: some pre-existing formatting
+                    errors exist in files not yet cleaned; run
+                    "npx biome check --write <file>" per file to fix)
+
+Covered by tests, among others: registration/role mapping, refresh
+rotation + replay rejection, lockout, weak-password rejection, MFA
+enable + single-use recovery codes, session listing/revocation,
+resource FSM, admin report download permissions.
+
+
+========================================================================
+PART 9 — PRODUCTION (DOCKER)
+========================================================================
+
+  cp .env.example .env   # fill real values first (S3 + SMTP REQUIRED)
+  docker compose up --build
+
+  nginx :8080  ->  /api + /socket.io -> backend:5347
+                ->  everything else  -> frontend SPA
+
+  Seed the production DB once:
+     docker compose run --rm backend npm run seed
+
+CI/CD (.github/workflows/deploy.yml) on push to main:
+  lint + typecheck -> tests -> build & push ghcr images ->
+  deploy staging -> blue-green production deploy (SSH).
+
+
+========================================================================
+PART 10 — TROUBLESHOOTING
+========================================================================
+
+  * Browser 500s on login but curl works?
+    A stale server is squatting on 5347 or 8175:
+        npm run dev:clean   &&   npm run dev
+
+  * "JWT key not found" / login broken?
+    Run: bash packages/backend/scripts/generate-keys.sh
+
+  * MongoDB connection errors at boot?
+    The API retries 5x with backoff (helps flaky Atlas DNS). Check
+    MONGODB_URI; remember to percent-encode @ # / in passwords.
+
+  * No emails arriving?
+    Expected in dev — they are printed in the backend log instead.
+
+  * MFA codes rejected?
+    Phone/authenticator clock drift — enable "time sync" in the
+    authenticator app settings.
+
+  * Locked out of an account (5 wrong passwords)?
+    Wait 15 minutes, or promote/create a fresh admin:
+        npm run make:admin -- <email> <password>
+
+  * Port already in use (EADDRINUSE)?
+        npm run dev:clean
+
+
+========================================================================
+PART 11 — PROJECT MAP (where things live)
+========================================================================
+
+  packages/backend/src/
+     app.ts            middleware order, body limits, webhook raw body
+     server.ts         boot, Mongo/Redis connect, cron, graceful exit
+     config/           env.ts (zod-validated), db.ts, redis.ts
+     middleware/       auth, csrf, cors, security(helmet), rate limits,
+                       validation, requestId, errorHandler, notFound
+     models/           User, Order, ProviderListing, RefreshToken,
+                       PasswordResetToken, ActivityLog, Resource,
+                       Comment, Vote, Notification, Transaction
+     services/         AuthService, OrderService, PaymentService,
+                       ProviderListingService, AdminService, fsm, ...
+     routes/           /auth /orders /provider/listings /admin ...
+     socket/           JWT-authenticated Socket.io + presence
+     jobs/             hourly report scheduler (node-cron)
+     seed/             provider-catalog.json + seeders + exporters
+
+  packages/frontend/src/
+     pages/            Home, Marketplace, Cart, Orders, Provider,
+                       Admin, Login/Register (+ /provider variants),
+                       Forgot/Reset password, Verify, Settings, ...
+     stores/           zustand: auth (token in memory), cart, ui, composer
+     lib/api.ts        axios + auto-refresh-on-401 + CSRF header echo
+     lib/roles.ts      canBuy/canSell/canPublish/homeForRole
+     context/          SocketContext (realtime notifications)
+     layouts/          RootLayout (nav + idle timeout + theme)
+
+  Useful commands
+     npm run dev / dev:clean / seed / seed:export / export:orders
+     npm run make:admin -- <email> <password>
+     npm run build / test / typecheck / lint
+
+========================================================================
+Generated by Buffy (Freebuff) — verified: typecheck PASS, backend 42/42,
+frontend 7/7 tests PASS, production build PASS.
+========================================================================

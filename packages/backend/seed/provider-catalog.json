@@ -1,0 +1,349 @@
+{
+  "currency": "INR",
+  "providers": [
+    {
+      "email": "krishna.groceries@example.com",
+      "username": "krishna_groceries",
+      "password": "Provider@1234",
+      "contactPhone": "+91 98765 43210",
+      "contactEmail": "krishna.groceries@example.com",
+      "profile": {
+        "firstName": "Krishna",
+        "lastName": "Sharma",
+        "bio": "Daily groceries from our family shop, delivered fresh."
+      },
+      "listings": [
+        {
+          "title": "Basmati Rice (Premium)",
+          "description": "Aged 12-month premium basmati rice, 25kg sack option available.",
+          "category": "grocery",
+          "price": 95,
+          "unit": "kg",
+          "quantity": 500
+        },
+        {
+          "title": "Toor Dal",
+          "description": "Unpolished toor dal, sourced from local farmers.",
+          "category": "grocery",
+          "price": 140,
+          "unit": "kg",
+          "quantity": 300
+        },
+        {
+          "title": "Sunflower Oil",
+          "description": "Refined sunflower oil, 1L pouch.",
+          "category": "grocery",
+          "price": 145,
+          "unit": "l",
+          "quantity": 200
+        },
+        {
+          "title": "Fresh Onions",
+          "description": "Nashik red onions, graded and cleaned.",
+          "category": "grocery",
+          "price": 32,
+          "unit": "kg",
+          "quantity": 1000
+        },
+        {
+          "title": "Farm Fresh Eggs",
+          "description": "Free-range brown eggs, tray of 12.",
+          "category": "grocery",
+          "price": 96,
+          "unit": "pcs",
+          "quantity": 240
+        }
+      ]
+    },
+    {
+      "email": "meera.organic@example.com",
+      "username": "meera_organic",
+      "password": "Provider@1234",
+      "contactPhone": "+91 99887 76655",
+      "contactEmail": "meera.organic@example.com",
+      "profile": {
+        "firstName": "Meera",
+        "lastName": "Iyer",
+        "bio": "Certified organic vegetables and fruits, chemical free."
+      },
+      "listings": [
+        {
+          "title": "Organic Tomatoes",
+          "description": "Vine-ripened organic tomatoes from our own farm.",
+          "category": "grocery",
+          "price": 48,
+          "unit": "kg",
+          "quantity": 150
+        },
+        {
+          "title": "Organic Spinach (Palak)",
+          "description": "Fresh palak bunches, picked every morning.",
+          "category": "grocery",
+          "price": 25,
+          "unit": "kg",
+          "quantity": 80
+        },
+        {
+          "title": "Organic Bananas",
+          "description": "Robusta bananas, sweet and ripe.",
+          "category": "grocery",
+          "price": 60,
+          "unit": "kg",
+          "quantity": 120
+        },
+        {
+          "title": "Fresh Orange Juice",
+          "description": "Cold-pressed orange juice, no added sugar.",
+          "category": "grocery",
+          "price": 120,
+          "unit": "l",
+          "quantity": 60
+        }
+      ]
+    },
+    {
+      "email": "singh.dairy@example.com",
+      "username": "singh_dairy",
+      "password": "Provider@1234",
+      "contactPhone": "+91 91234 56780",
+      "contactEmail": "singh.dairy@example.com",
+      "profile": {
+        "firstName": "Harpreet",
+        "lastName": "Singh",
+        "bio": "Farm-fresh milk, paneer and dairy products."
+      },
+      "listings": [
+        {
+          "title": "Full Cream Milk",
+          "description": "Pasteurised full cream milk, delivered chilled.",
+          "category": "grocery",
+          "price": 58,
+          "unit": "l",
+          "quantity": 400
+        },
+        {
+          "title": "Fresh Paneer",
+          "description": "Soft fresh paneer, 200g block.",
+          "category": "grocery",
+          "price": 90,
+          "unit": "pcs",
+          "quantity": 150
+        },
+        {
+          "title": "Curd (Dahi)",
+          "description": "Thick set curd made fresh daily.",
+          "category": "grocery",
+          "price": 40,
+          "unit": "kg",
+          "quantity": 200
+        },
+        {
+          "title": "Desi Ghee",
+          "description": "Pure cow ghee, 500ml jar.",
+          "category": "grocery",
+          "price": 640,
+          "unit": "l",
+          "quantity": 50
+        }
+      ]
+    },
+    {
+      "email": "arun.stationery@example.com",
+      "username": "arun_stationery",
+      "password": "Provider@1234",
+      "contactPhone": "+91 90987 65432",
+      "contactEmail": "arun.stationery@example.com",
+      "profile": {
+        "firstName": "Arun",
+        "lastName": "Kumar",
+        "bio": "Stationery, school supplies and home essentials."
+      },
+      "listings": [
+        {
+          "title": "A4 Copy Paper (Ream)",
+          "description": "70 GSM A4 paper, 500 sheets per ream.",
+          "category": "item",
+          "price": 280,
+          "unit": "units",
+          "quantity": 120
+        },
+        {
+          "title": "Ballpoint Pens (Pack of 10)",
+          "description": "Blue ink ballpoint pens, smooth writing.",
+          "category": "item",
+          "price": 120,
+          "unit": "pcs",
+          "quantity": 300
+        },
+        {
+          "title": "Notebook (Single Ruled)",
+          "description": "200-page single ruled notebook, soft cover.",
+          "category": "item",
+          "price": 45,
+          "unit": "units",
+          "quantity": 500
+        }
+      ]
+    },
+    {
+      "email": "priya.kitchen@example.com",
+      "username": "priya_kitchen",
+      "password": "Provider@1234",
+      "contactPhone": "+91 92345 67891",
+      "contactEmail": "priya.kitchen@example.com",
+      "profile": {
+        "firstName": "Priya",
+        "lastName": "Patel",
+        "bio": "Home kitchen items, spices and masala blends."
+      },
+      "listings": [
+        {
+          "title": "Turmeric Powder (Haldi)",
+          "description": "Pure ground turmeric with high curcumin content.",
+          "category": "grocery",
+          "price": 220,
+          "unit": "kg",
+          "quantity": 90
+        },
+        {
+          "title": "Red Chilli Powder",
+          "description": "Guntur chilli powder, medium hot.",
+          "category": "grocery",
+          "price": 180,
+          "unit": "kg",
+          "quantity": 70
+        },
+        {
+          "title": "Steel Tiffin Box",
+          "description": "2-tier stainless steel tiffin box with clasp.",
+          "category": "item",
+          "price": 350,
+          "unit": "units",
+          "quantity": 60
+        },
+        {
+          "title": "Non-stick Frying Pan",
+          "description": "28cm non-stick fry pan, induction compatible.",
+          "category": "item",
+          "price": 899,
+          "unit": "units",
+          "quantity": 25
+        }
+      ]
+    },
+    {
+      "email": "rohit.bakery@example.com",
+      "username": "rohit_bakery",
+      "password": "Provider@1234",
+      "contactPhone": "+91 93456 78912",
+      "contactEmail": "rohit.bakery@example.com",
+      "profile": {
+        "firstName": "Rohit",
+        "lastName": "Verma",
+        "bio": "Fresh bread, bakery items and snacks baked daily."
+      },
+      "listings": [
+        {
+          "title": "Whole Wheat Bread",
+          "description": "450g loaf, no preservatives.",
+          "category": "grocery",
+          "price": 55,
+          "unit": "units",
+          "quantity": 100
+        },
+        {
+          "title": "Butter Cookies (400g)",
+          "description": "Crunchy butter cookies in a family pack.",
+          "category": "grocery",
+          "price": 150,
+          "unit": "units",
+          "quantity": 80
+        },
+        {
+          "title": "Chocolate Brownie (Single)",
+          "description": "Gooey chocolate brownie, baked fresh.",
+          "category": "item",
+          "price": 60,
+          "unit": "pcs",
+          "quantity": 200
+        }
+      ]
+    },
+    {
+      "email": "nisha.cleaning@example.com",
+      "username": "nisha_cleaning",
+      "password": "Provider@1234",
+      "contactPhone": "+91 94567 89123",
+      "contactEmail": "nisha.cleaning@example.com",
+      "profile": {
+        "firstName": "Nisha",
+        "lastName": "Rao",
+        "bio": "Home cleaning essentials and detergents."
+      },
+      "listings": [
+        {
+          "title": "Dishwash Liquid (750ml)",
+          "description": "Lemon scented dishwash liquid, tough on grease.",
+          "category": "item",
+          "price": 95,
+          "unit": "l",
+          "quantity": 150
+        },
+        {
+          "title": "Floor Cleaner (1L)",
+          "description": "Pine scent floor cleaner concentrate.",
+          "category": "item",
+          "price": 110,
+          "unit": "l",
+          "quantity": 130
+        },
+        {
+          "title": "Laundry Detergent (1kg)",
+          "description": "Surf-style powder detergent, 1kg pack.",
+          "category": "item",
+          "price": 130,
+          "unit": "kg",
+          "quantity": 200
+        }
+      ]
+    },
+    {
+      "email": "vikram.electronics@example.com",
+      "username": "vikram_electronics",
+      "password": "Provider@1234",
+      "contactPhone": "+91 95678 91234",
+      "contactEmail": "vikram.electronics@example.com",
+      "profile": {
+        "firstName": "Vikram",
+        "lastName": "Gupta",
+        "bio": "Small electronics, bulbs and home appliances."
+      },
+      "listings": [
+        {
+          "title": "LED Bulb (9W)",
+          "description": "9W LED bulb, 6500K daylight, 1-year warranty.",
+          "category": "item",
+          "price": 85,
+          "unit": "units",
+          "quantity": 400
+        },
+        {
+          "title": "Extension Board (6 Socket)",
+          "description": "6-socket extension board with surge protection, 2m cord.",
+          "category": "item",
+          "price": 450,
+          "unit": "units",
+          "quantity": 75
+        },
+        {
+          "title": "AA Batteries (Pack of 4)",
+          "description": "Alkaline AA batteries, long lasting.",
+          "category": "item",
+          "price": 140,
+          "unit": "pcs",
+          "quantity": 350
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+# Repo metadata
+.git
+.github
+.gitignore
+*.md
+
+# Env & secrets — never bake into images
+.env
+.env.*
+!.env.example
+packages/backend/keys
+
+# Dependencies (installed inside the image)
+node_modules
+**/node_modules
+
+# Build output & local artifacts
+dist
+**/dist
+coverage
+exports
+.turbo
+
+# Logs & temp
+*.log
+.DS_Store
