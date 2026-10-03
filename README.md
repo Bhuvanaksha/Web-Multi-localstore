@@ -6,6 +6,41 @@ A monorepo (npm workspaces) implementing a type-safe full-stack MERN application
 - **`packages/backend`** — Express REST API, Socket.io realtime, MongoDB (Mongoose), Redis, JWT auth, FSM-driven resources.
 - **`packages/frontend`** — React SPA (Vite), TanStack Query, Zustand, Socket.io client.
 
+## Screenshots
+
+Captured from the running app with seeded demo data (real sessions for
+every role — customer, provider and admin).
+
+**Public pages**
+
+| Home | Marketplace |
+| --- | --- |
+| ![Home](screenshots/01-home.png) | ![Marketplace](screenshots/02-marketplace.png) |
+
+| Login | Provider registration |
+| --- | --- |
+| ![Login](screenshots/03-login.png) | ![Provider registration](screenshots/04-register-provider.png) |
+
+**Customer** (dashboard with a real order, cart, delivery timeline, account security)
+
+| Dashboard | Cart |
+| --- | --- |
+| ![Dashboard](screenshots/05-dashboard.png) | ![Cart](screenshots/06-cart.png) |
+
+| Orders | Settings |
+| --- | --- |
+| ![Orders](screenshots/07-orders.png) | ![Settings](screenshots/08-settings.png) |
+
+**Provider — Provider Studio** (listings, order inbox, exports)
+
+![Provider Studio](screenshots/09-provider-studio.png)
+
+**Admin** (moderation / orders / activity / live security dashboard)
+
+| Admin panel | Security & Monitoring |
+| --- | --- |
+| ![Admin panel](screenshots/10-admin-panel.png) | ![Security dashboard](screenshots/11-admin-security.png) |
+
 ## Quick start (development)
 
 ```bash
