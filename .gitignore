@@ -35,3 +35,6 @@ packages/reports/
 # Misc
 *.tsbuildinfo
 .cache/
+
+# Local-only project guide (intentionally never committed or pushed)
+PROJECT-GUIDE-A-to-Z.txt
