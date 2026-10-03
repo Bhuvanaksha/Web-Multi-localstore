@@ -230,3 +230,8 @@ Seed a deployed database once (after MongoDB is up):
 ```bash
 docker compose run --rm backend npm run seed
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Bhuvanaksha — use it, fork it, ship it (keep the
+license file with the copyright notice).
